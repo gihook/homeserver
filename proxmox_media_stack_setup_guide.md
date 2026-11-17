@@ -29,26 +29,26 @@ Run the following commands on your Proxmox host to create the four containers (a
 
 ```bash
 # 1. qBittorrent Container (ID 202)
-pct create 202 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst --hostname qbittorrent --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
+pct create 202 local:debian-12-standard_12.12-1_amd64.tar.zst --hostname qbittorrent --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
 
 # 2. Radarr Container (ID 203)
-pct create 203 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst --hostname radarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
+pct create 203 local:debian-12-standard_12.12-1_amd64.tar.zst --hostname radarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
 
 # 3. Sonarr Container (ID 204)
-pct create 204 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst --hostname sonarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
+pct create 204 local:debian-12-standard_12.12-1_amd64.tar.zst --hostname sonarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
 
 # 4. Bazarr Container (ID 205)
-pct create 205 local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst --hostname bazarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
+pct create 205 local:debian-12-standard_12.12-1_amd64.tar.zst --hostname bazarr --cores 2 --memory 1024 --swap 512 --rootfs local-lvm:8 --net0 name=eth0,bridge=vmbr0,ip=DHCP --unprivileged 1 --features nesting=1
 ```
 
 ### Step 3: Configure Bind-Mounts
 
 Edit the configuration files for each container on the Proxmox host to map your storage:
 
-* **qBittorrent (`/etc/pve/lxc/202.conf`):** Add `mp0: /mnt/data/downloads,mp=/mnt/downloads`
-* **Radarr (`/etc/pve/lxc/203.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
-* **Sonarr (`/etc/pve/lxc/204.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
-* **Bazarr (`/etc/pve/lxc/205.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
+- **qBittorrent (`/etc/pve/lxc/202.conf`):** Add `mp0: /mnt/data/downloads,mp=/mnt/downloads`
+- **Radarr (`/etc/pve/lxc/203.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
+- **Sonarr (`/etc/pve/lxc/204.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
+- **Bazarr (`/etc/pve/lxc/205.conf`):** Add `mp0: /mnt/data,mp=/mnt/data`
 
 Start all four containers:
 
@@ -152,25 +152,26 @@ systemctl daemon-reload && systemctl enable --now bazarr
 ## Connecting Everything Together
 
 1. **Configure qBittorrent Download Path:**
-   * Open qBittorrent (`http://<qbittorrent-ip>:8080`), go to **Options > Downloads**, and set the **Default Save Path** to `/mnt/downloads`.
+   - Open qBittorrent (`http://<qbittorrent-ip>:8080`), go to **Options > Downloads**, and set the **Default Save Path** to `/mnt/downloads`.
 
 2. **Link qBittorrent to Radarr/Sonarr:**
-   * Open Radarr (`http://<radarr-ip>:7878`) and Sonarr (`http://<sonarr-ip>:8989`).
-   * Go to **Settings > Download Clients > Add Client** and choose **qBittorrent**. Enter your qBittorrent container IP and port (`8080`).
-   * *(Important)* Because qBittorrent sees `/mnt/downloads` while Radarr/Sonarr see `/mnt/data/downloads`, add a **Remote Path Mapping** at the bottom of the Download Clients page in Radarr and Sonarr:
-     * **Host:** `<qbittorrent-ip>`
-     * **Remote Path:** `/mnt/downloads/`
-     * **Local Path:** `/mnt/data/downloads/`
+   - Open Radarr (`http://<radarr-ip>:7878`) and Sonarr (`http://<sonarr-ip>:8989`).
+   - Go to **Settings > Download Clients > Add Client** and choose **qBittorrent**. Enter your qBittorrent container IP and port (`8080`).
+   - _(Important)_ Because qBittorrent sees `/mnt/downloads` while Radarr/Sonarr see `/mnt/data/downloads`, add a **Remote Path Mapping** at the bottom of the Download Clients page in Radarr and Sonarr:
+     - **Host:** `<qbittorrent-ip>`
+     - **Remote Path:** `/mnt/downloads/`
+     - **Local Path:** `/mnt/data/downloads/`
 
 3. **Configure Root Folders:**
-   * In Radarr (**Settings > Media Management**), add your root folder pointing to `/mnt/data/movies`.
-   * In Sonarr (**Settings > Media Management**), add your root folder pointing to `/mnt/data/shows`.
+   - In Radarr (**Settings > Media Management**), add your root folder pointing to `/mnt/data/movies`.
+   - In Sonarr (**Settings > Media Management**), add your root folder pointing to `/mnt/data/shows`.
 
 4. **Link Bazarr to Radarr & Sonarr:**
-   * Open Bazarr (`http://<bazarr-ip>:6767`).
-   * Go to **Settings > Radarr** and **Settings > Sonarr**, enable each connection, and enter their respective container IPs, ports (`7878` and `8989`), and **API Keys** (found under **Settings > General** in Radarr/Sonarr).
-   * Go to **Settings > Languages** to set up your desired subtitle languages and create a language profile, then add your subtitle providers (e.g., OpenSubtitles, Podnapisi) under **Settings > Providers**.
+   - Open Bazarr (`http://<bazarr-ip>:6767`).
+   - Go to **Settings > Radarr** and **Settings > Sonarr**, enable each connection, and enter their respective container IPs, ports (`7878` and `8989`), and **API Keys** (found under **Settings > General** in Radarr/Sonarr).
+   - Go to **Settings > Languages** to set up your desired subtitle languages and create a language profile, then add your subtitle providers (e.g., OpenSubtitles, Podnapisi) under **Settings > Providers**.
 
 5. **Link to Jellyfin:**
-   * Ensure Jellyfin has access to `/mnt/data/movies` and `/mnt/data/shows` via its own bind-mount from the host (`mp0: /mnt/data,mp=/mnt/data`).
-   * Add the libraries inside the Jellyfin Web UI (`http://<jellyfin-ip>`) pointing to `/mnt/data/movies` and `/mnt/data/shows`. Jellyfin will automatically pick up the `.srt` files Bazarr saves next to your media.
+   - Ensure Jellyfin has access to `/mnt/data/movies` and `/mnt/data/shows` via its own bind-mount from the host (`mp0: /mnt/data,mp=/mnt/data`).
+   - Add the libraries inside the Jellyfin Web UI (`http://<jellyfin-ip>`) pointing to `/mnt/data/movies` and `/mnt/data/shows`. Jellyfin will automatically pick up the `.srt` files Bazarr saves next to your media.
+
